@@ -363,7 +363,7 @@ q15_t synth_process()
 
 /* use 8 bit 128 sample LUT for sine wave */
 static const q7_t sine_lut[128 + 1] = {
-    0, 6, 12, 19, 25, 31, 37, 43, 49, 54, 60, 65, 71, 76, 81, 85, 90, 94, 98, 102, 106, 109, 112, 115, 117, 120, 122, 123, 125, 126, 126, 127, 127, 127, 126, 126, 125, 123, 122, 120, 117, 115, 112, 109, 106, 102, 98, 94, 90, 85, 81, 76, 71, 65, 60, 54, 49, 43, 37, 31, 25, 19, 12, 6, 0, -6, -12, -19, -25, -31, -37, -43, -49, -54, -60, -65, -71, -76, -81, -85, -90, -94, -98, -102, -106, -109, -112, -115, -117, -120, -122, -123, -125, -126, -126, -127, -127, -127, -126, -126, -125, -123, -122, -120, -117, -115, -112, -109, -106, -102, -98, -94, -90, -85, -81, -76, -71, -65, -60, -54, -49, -43, -37, -31, -25, -19, -12, -6, 0
+#include "sine-table.h"
 };
 
 /*
@@ -460,10 +460,10 @@ int main()
     synth_voice_t *voice = &synth_voices[0];
 
     synth_init_envelope_node(&voice->nodes[1], NULL, /* gain */
-                             500,                    /* attack */
-                             150,                    /* decay */
-                             Q15_MAX * .8,           /* sustain */
-                             150                     /* release */
+                             300,                    /* attack */
+                             10,                    /* decay */
+                             Q15_MAX * 0.2,           /* sustain */
+                             50                     /* release */
     );
 
     /* Initialize oscillator */
@@ -482,7 +482,7 @@ int main()
     /* Initialize low-pass filter */
     synth_init_filter_lp_node(&voice->nodes[0], NULL,  /* gain */
                               &voice->nodes[3].output, /* input */
-                              8000                     /* factor */
+                              10000                     /* factor */
     );
 
     /* Configure voice 1 with alternative settings:
@@ -492,9 +492,9 @@ int main()
     voice = &synth_voices[1];
 
     synth_init_envelope_node(&voice->nodes[1], NULL, /* gain */
-                             100,                    /* attack */
-                             500,                    /* decay */
-                             Q15_MAX * 0.5,          /* sustain */
+                             1000,                    /* attack */
+                             200,                    /* decay */
+                             Q15_MAX * 0.4,          /* sustain */
                              15                      /* release */
     );
 
@@ -505,7 +505,7 @@ int main()
 
     synth_init_filter_lp_node(&voice->nodes[0], NULL,  /* gain */
                               &voice->nodes[2].output, /* input */
-                              4000                     /* factor */
+                              8000                     /* factor */
     );
 
     /* fill up a buffer with audio */
@@ -526,8 +526,8 @@ int main()
      * These values determine the duration of each note.
      */
     const uint8_t twinkleTwinkleBeats[] = {
-        4, 4, 4, 4, 4, 4, 2, 2, 4, 4, 4, 4, 4, 4, 2, 2, 4, 4, 4, 4, 4, 4, 2, 2,
-        4, 4, 4, 4, 4, 4, 2, 2, 4, 4, 4, 4, 4, 4, 2, 2, 4, 4, 4, 4, 4, 4, 2, 2,
+        4, 4, 4, 4, 4, 4, 3, 5, 4, 4, 4, 4, 4, 4, 3, 5, 4, 4, 4, 4, 4, 4, 3, 5,
+        4, 4, 4, 4, 4, 4, 3, 5, 4, 4, 4, 4, 4, 4, 3, 5, 4, 4, 4, 4, 4, 4, 3, 5,
     };
 
     /* Counter for the remaining duration (in samples) of the current note */
@@ -552,12 +552,12 @@ int main()
                  * octaves lower.
                  */
                 synth_voice_note_on(&synth_voices[0], note);
-                synth_voice_note_on(&synth_voices[1], note - 24);
+                synth_voice_note_on(&synth_voices[1], note - 12);
             }
             note_index++;
             if (note_index >= sizeof(twinkleTwinkle))
                 break;
-        } else if (note_duration < 500) {
+        } else if (note_duration < 400) {
             /* When the note duration is almost over, cut the note short to
              * allow for a natural decay.
              */
