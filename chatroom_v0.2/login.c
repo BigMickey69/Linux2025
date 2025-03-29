@@ -23,7 +23,7 @@ void init_db(){
 void expand_db(){
     int new_size = db_max * 2;
     user_db = (char**)realloc(user_db, sizeof(char*) * new_size);
-    pswd_db = (char**)realloc(pswd_db, sizeof(char*) * new_size);  // [CHANGE]: fixed reallocation for pswd_db
+    pswd_db = (char**)realloc(pswd_db, sizeof(char*) * new_size);
     for (int i = db_max; i < new_size; i++){
         user_db[i] = (char*)malloc(MAX_USERNAME_LENGTH);
         pswd_db[i] = (char*)malloc(MAX_PASSWORD_LENGTH);
@@ -66,15 +66,12 @@ bool del_account(const char* username){
     return true;
 }
 
-// ===== Utility functions for client socket I/O =====
 
-// Sends a message to the client over the socket.
 static void client_send(int client_fd, const char *msg) {
     write(client_fd, msg, strlen(msg));
 }
 
-// Reads a line from the client into buffer (up to maxlen chars).
-// Returns number of bytes read or a negative value on error/disconnect.
+
 static int client_readline(int client_fd, char *buffer, int maxlen) {
     int total = 0;
     while (total < maxlen - 1) {
@@ -91,17 +88,15 @@ static int client_readline(int client_fd, char *buffer, int maxlen) {
     return total;
 }
 
-// ===== Client–Side UI Functions =====
 
-// Sends the welcome banner to the client.
-void client_printer(int client_fd){    // [CHANGE]: Now sends to client.
+void client_printer(int client_fd){
     client_send(client_fd, "=============================================\n");
     client_send(client_fd, "         BASIC CHATROOM SERVER\n");
     client_send(client_fd, "=============================================\n");
 }
 
-// Prompts the client for username and password over the socket.
-// Returns the user’s index on successful login or -1 on exit/disconnect.
+
+// Returns the user’s index on successful login, -1 on exit.
 int client_loginmenu(int client_fd){   
     char username[MAX_USERNAME_LENGTH];
     char password[MAX_PASSWORD_LENGTH];
@@ -128,7 +123,7 @@ int client_loginmenu(int client_fd){
 }
 
 // Prompts the client to create an account.
-void client_createmenu(int client_fd){  // [CHANGE]: Uses client_fd for I/O.
+void client_createmenu(int client_fd){
     char username[MAX_USERNAME_LENGTH];
     char password[MAX_PASSWORD_LENGTH];
     char confirm[3];  // for 'y' or 'n'
@@ -154,10 +149,8 @@ void client_createmenu(int client_fd){  // [CHANGE]: Uses client_fd for I/O.
     }
 }
 
-// Displays the home menu to the client. Offers options for login,
-// account creation, or exit. Returns the account index if login succeeds,
-// or -1 if the client chooses to exit.
-int client_Homemenu(int client_fd){   // [CHANGE]: Uses client_fd for I/O.
+// Returns the account index if login succeeds, or -1 if the client chooses to exit.
+int client_Homemenu(int client_fd){
     char choice[10];
     while (1) {
         client_send(client_fd, "=============================================\n");

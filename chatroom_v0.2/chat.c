@@ -88,7 +88,6 @@ int main(int argc, char **argv)
                     continue;
                 }
                 conns[new_fd] = 1;
-                // [CHANGE]: Color is now determined by the user’s account index.
                 client_colors[new_fd] = 30 + (user_index % 7);
             }
         }
@@ -135,7 +134,6 @@ int main(int argc, char **argv)
             }
         }
         
-        // Rebuild the descriptor set for select().
         FD_ZERO(&rfds);
         FD_SET(server_fd, &rfds);
         max_fd = server_fd + 1;
