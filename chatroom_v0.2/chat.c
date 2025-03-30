@@ -14,6 +14,11 @@
 #include "login.h"
 
 int client_colors[FD_SETSIZE] = {0};
+int fd_to_index[FD_SETSIZE] = {0};
+// Stack to keep track online fd-s
+int online_fd[FD_SETSIZE] = {0};
+int user_count = 0;
+
 
 int main(int argc, char **argv)
 {
@@ -80,6 +85,10 @@ int main(int argc, char **argv)
                     close(new_fd);
                     continue;
                 }
+                fd_to_index[new_fd] = user_index;
+                // Addd to online_fd, marking user as online
+                online_fd[user_count++] = new_fd;
+                printf("[Logged in] fd: %d, index: %d\n", new_fd, user_index);
 
                 int onoff = 1;
                 if (ioctl(new_fd, FIONBIO, &onoff) < 0) {
@@ -88,6 +97,7 @@ int main(int argc, char **argv)
                     continue;
                 }
                 conns[new_fd] = 1;
+                // [CHANGE]: Color is now determined by the user’s account index.
                 client_colors[new_fd] = 30 + (user_index % 7);
             }
         }
@@ -109,12 +119,35 @@ int main(int argc, char **argv)
                 }
                 
                 else if (nread > 0) {
+                    // Making sure that there IS a '\0'
                     buf[nread-1] = '\0';
+
+
+                    // Check if it's a command
+                    if(buf[0] == '/'){
+                        char msg[1024];
+                        if(strcmp(buf, "/online") == 0){
+                            sprintf(msg, "Current online users (%d user(s)): \n", user_count);
+                            client_send(fd, msg);
+                            for(int i=0; i<user_count; i++) {
+                                sprintf(msg, "- %s \n", find_username(fd_to_index[online_fd[i]]));
+                                client_send(fd, msg);
+                            }
+                        }else if(strcmp(buf, "/hello") == 0){
+                            client_send(fd, "Why hello!\n");
+                        }
+                        else{
+                            client_send(fd, "Unknown command!\n");
+                        }
+                        // Since it's a command, we don't send anything to other users
+                        continue;
+                    }
+                    
                     char colored_msg[1024 + 20]; // extra space for escape characters
                     int colored_len = snprintf(colored_msg, sizeof(colored_msg),
                         "\033[47m\033[%dm%s\033[0m\n", client_colors[fd], buf);
 
-                    printf("[%d]: %s\n", fd, colored_msg);
+                    printf("[%s]: %s\n", find_username(fd_to_index[fd]), colored_msg);
 
 
                     for (int dest_fd = 0; dest_fd < FD_SETSIZE; dest_fd++) {
@@ -134,6 +167,7 @@ int main(int argc, char **argv)
             }
         }
         
+        // Rebuild the descriptor set for select().
         FD_ZERO(&rfds);
         FD_SET(server_fd, &rfds);
         max_fd = server_fd + 1;

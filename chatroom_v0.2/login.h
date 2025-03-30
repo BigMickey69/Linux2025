@@ -6,11 +6,15 @@
 #define MAX_USERNAME_LENGTH 15
 #define MAX_PASSWORD_LENGTH 12
 
-// Client–side login functions: these now use the socket descriptor
-// to send prompts and receive responses from the client.
-int client_loginmenu(int client_fd);        // [CHANGE]: now takes client_fd
-void client_createmenu(int client_fd);        // [CHANGE]: now takes client_fd
-int client_Homemenu(int client_fd);           // [CHANGE]: now takes client_fd
+
+char* find_username(int index);
+/* These use the socket descriptor
+ * to send prompts and receive responses from the client.*/
+int client_loginmenu(int client_fd);
+void client_createmenu(int client_fd);
+int client_Homemenu(int client_fd);
+
+void client_send(int client_fd, const char *msg);
 
 // Initialize the user database.
 void init_db();
@@ -19,8 +23,7 @@ void init_db();
 bool create_account(const char* username, const char* password);
 bool del_account(const char* username);
 
-// Sends a welcome banner to the client.
-// [CHANGE]: This replaces the server–side printer() with one that sends to the client.
+// Sends a welcome banner
 void client_printer(int client_fd);
 
 #endif
